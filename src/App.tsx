@@ -1,10 +1,17 @@
+import LandingPage from "./pages/LandingPage";
+import AuthPage from "./pages/AuthPage";
+import DashboardLayout from "./layouts/DashboardLayout";
+import DashboardOverview from "./pages/dashboard/DashboardOverview";
+import ClientsPage from "./pages/dashboard/ClientsPage";
+import InvoicesPage from "./pages/dashboard/InvoicesPage";
+import ExpensesPage from "./pages/dashboard/ExpensesPage";
+import AIAssistantPage from "./pages/dashboard/AIAssistantPage";
+import NotFound from "./pages/NotFound";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
@@ -15,8 +22,15 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardOverview />} />
+            <Route path="clients" element={<ClientsPage />} />
+            <Route path="invoices" element={<InvoicesPage />} />
+            <Route path="expenses" element={<ExpensesPage />} />
+            <Route path="ai" element={<AIAssistantPage />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
