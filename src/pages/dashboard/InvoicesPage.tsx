@@ -5,23 +5,59 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Plus, Send, Download } from "lucide-react";
-
-const invoicesData = [
-  { id: "INV-1042", client: "Mehta & Associates", amount: "₹85,000", date: "2026-03-20", due: "2026-04-20", status: "Sent" },
-  { id: "INV-1041", client: "Kapoor Group", amount: "₹1,20,000", date: "2026-03-18", due: "2026-04-18", status: "Paid" },
-  { id: "INV-1040", client: "Sharma Industries", amount: "₹65,000", date: "2026-03-15", due: "2026-04-15", status: "Overdue" },
-  { id: "INV-1039", client: "Patel Exports", amount: "₹45,000", date: "2026-03-10", due: "2026-04-10", status: "Sent" },
-  { id: "INV-1038", client: "Nair & Sons", amount: "₹90,000", date: "2026-03-05", due: "2026-04-05", status: "Paid" },
-  { id: "INV-1037", client: "Rajesh Kumar", amount: "₹25,000", date: "2026-02-28", due: "2026-03-28", status: "Paid" },
-  { id: "INV-1036", client: "Gupta Textiles", amount: "₹1,50,000", date: "2026-02-20", due: "2026-03-20", status: "Overdue" },
-];
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const statusColor = (s: string) =>
   s === "Paid" ? "default" : s === "Sent" ? "secondary" : "destructive";
 
 export default function InvoicesPage() {
   const [search, setSearch] = useState("");
-  const filtered = invoicesData.filter((i) => i.client.toLowerCase().includes(search.toLowerCase()) || i.id.toLowerCase().includes(search.toLowerCase()));
+  const [open, setOpen] = useState(false);
+  const [newInv, setNewInv] = useState({ invoice_number: "", amount: "", description: "", status: "Draft", due_date: "" });
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: invoices = [], isLoading } = useQuery({
+    queryKey: ["invoices"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("invoices").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const addInvoice = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("invoices").insert({
+        user_id: user!.id,
+        invoice_number: newInv.invoice_number,
+        amount: parseFloat(newInv.amount) || 0,
+        description: newInv.description,
+        status: newInv.status,
+        due_date: newInv.due_date || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      setOpen(false);
+      setNewInv({ invoice_number: "", amount: "", description: "", status: "Draft", due_date: "" });
+      toast.success("Invoice created!");
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const totalOutstanding = invoices.filter((i: any) => i.status !== "Paid").reduce((s: number, i: any) => s + Number(i.amount), 0);
+  const totalPaid = invoices.filter((i: any) => i.status === "Paid").reduce((s: number, i: any) => s + Number(i.amount), 0);
+  const filtered = invoices.filter((i: any) =>
+    i.invoice_number.toLowerCase().includes(search.toLowerCase()) || (i.description || "").toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -30,23 +66,44 @@ export default function InvoicesPage() {
           <h1 className="text-2xl font-bold text-foreground font-['Space_Grotesk']">Invoices</h1>
           <p className="text-sm text-muted-foreground">Manage and track all invoices</p>
         </div>
-        <Button className="bg-gradient-gold text-gold-foreground hover:opacity-90">
-          <Plus className="h-4 w-4 mr-2" /> Create Invoice
-        </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-gradient-gold text-gold-foreground hover:opacity-90"><Plus className="h-4 w-4 mr-2" /> Create Invoice</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Create Invoice</DialogTitle></DialogHeader>
+            <form onSubmit={(e) => { e.preventDefault(); addInvoice.mutate(); }} className="space-y-4">
+              <div><Label>Invoice Number</Label><Input value={newInv.invoice_number} onChange={(e) => setNewInv({ ...newInv, invoice_number: e.target.value })} required placeholder="INV-001" /></div>
+              <div><Label>Amount (₹)</Label><Input type="number" value={newInv.amount} onChange={(e) => setNewInv({ ...newInv, amount: e.target.value })} required /></div>
+              <div><Label>Description</Label><Input value={newInv.description} onChange={(e) => setNewInv({ ...newInv, description: e.target.value })} /></div>
+              <div><Label>Due Date</Label><Input type="date" value={newInv.due_date} onChange={(e) => setNewInv({ ...newInv, due_date: e.target.value })} /></div>
+              <div><Label>Status</Label>
+                <Select value={newInv.status} onValueChange={(v) => setNewInv({ ...newInv, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Draft">Draft</SelectItem><SelectItem value="Sent">Sent</SelectItem>
+                    <SelectItem value="Paid">Paid</SelectItem><SelectItem value="Overdue">Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" className="w-full bg-gradient-gold text-gold-foreground hover:opacity-90" disabled={addInvoice.isPending}>
+                {addInvoice.isPending ? "Creating..." : "Create Invoice"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: "Total Outstanding", value: "₹3,45,000", sub: "4 invoices" },
-          { label: "Paid This Month", value: "₹2,35,000", sub: "3 invoices" },
-          { label: "Overdue", value: "₹2,15,000", sub: "2 invoices" },
+          { label: "Total Outstanding", value: `₹${totalOutstanding.toLocaleString("en-IN")}` },
+          { label: "Total Paid", value: `₹${totalPaid.toLocaleString("en-IN")}` },
+          { label: "Total Invoices", value: invoices.length.toString() },
         ].map((s) => (
           <Card key={s.label} className="shadow-card">
             <CardContent className="pt-6">
               <p className="text-sm text-muted-foreground">{s.label}</p>
               <p className="text-xl font-bold text-foreground mt-1">{s.value}</p>
-              <p className="text-xs text-muted-foreground">{s.sub}</p>
             </CardContent>
           </Card>
         ))}
@@ -60,37 +117,32 @@ export default function InvoicesPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead className="hidden sm:table-cell">Date</TableHead>
-                <TableHead className="hidden md:table-cell">Due Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-10"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((inv) => (
-                <TableRow key={inv.id}>
-                  <TableCell className="font-mono text-sm font-medium">{inv.id}</TableCell>
-                  <TableCell className="text-foreground">{inv.client}</TableCell>
-                  <TableCell className="font-semibold">{inv.amount}</TableCell>
-                  <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">{inv.date}</TableCell>
-                  <TableCell className="hidden md:table-cell text-muted-foreground text-sm">{inv.due}</TableCell>
-                  <TableCell><Badge variant={statusColor(inv.status)} className="text-xs">{inv.status}</Badge></TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7"><Send className="h-3 w-3" /></Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7"><Download className="h-3 w-3" /></Button>
-                    </div>
-                  </TableCell>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">Loading invoices...</p>
+          ) : filtered.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">No invoices yet. Create your first!</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead className="hidden sm:table-cell">Due Date</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((inv: any) => (
+                  <TableRow key={inv.id}>
+                    <TableCell className="font-mono text-sm font-medium">{inv.invoice_number}</TableCell>
+                    <TableCell className="font-semibold">₹{Number(inv.amount).toLocaleString("en-IN")}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">{inv.due_date || "—"}</TableCell>
+                    <TableCell><Badge variant={statusColor(inv.status)} className="text-xs">{inv.status}</Badge></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
