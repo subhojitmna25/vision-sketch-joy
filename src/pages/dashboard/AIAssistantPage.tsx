@@ -3,11 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Send, Bot, User, Sparkles } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
+
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 const suggestions = [
   "What are the GST filing deadlines for Q4?",
@@ -32,30 +36,76 @@ export default function AIAssistantPage() {
   }, [messages]);
 
   const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || isLoading) return;
     const userMsg: Message = { role: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    const allMessages = [...messages, userMsg];
+    setMessages(allMessages);
     setInput("");
     setIsLoading(true);
 
-    // Simulated AI response (will connect to Lovable AI later)
-    setTimeout(() => {
-      const responses: Record<string, string> = {
-        gst: "**GST Filing Deadlines for Q4 (Jan–Mar 2026):**\n\n- **GSTR-1**: 11th of the following month\n- **GSTR-3B**: 20th of the following month\n- **GSTR-9**: December 31st (annual)\n- **GSTR-9C**: December 31st (reconciliation)\n\nMake sure your clients have their invoices reconciled before filing. Need help with any specific return?",
-        "80c": "**Section 80C Deductions (FY 2025-26):**\n\nMaximum deduction: **₹1,50,000**\n\nEligible investments:\n- EPF / VPF\n- PPF (Public Provident Fund)\n- ELSS Mutual Funds (3-year lock-in)\n- NSC (National Savings Certificate)\n- Life Insurance Premium\n- 5-year Fixed Deposits\n- Sukanya Samriddhi Yojana\n- Home Loan Principal Repayment\n- Tuition Fees (up to 2 children)\n\nWould you like me to help calculate the optimal 80C planning for a specific client?",
-        tds: "**TDS Rate on Professional Fees (Section 194J):**\n\n- **Technical Services**: 2%\n- **Professional Services**: 10%\n- **Threshold**: ₹30,000 per annum\n\n**Important Notes:**\n- If PAN not furnished: 20% TDS\n- For individuals/HUF not liable to audit: No TDS if payment < ₹30,000\n- Due date for deposit: 7th of the following month\n\nShould I help with TDS calculations for a specific payment?",
-      };
+    let assistantSoFar = "";
+    const upsertAssistant = (chunk: string) => {
+      assistantSoFar += chunk;
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant" && prev.length === allMessages.length + 1) {
+          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+        }
+        return [...prev, { role: "assistant", content: assistantSoFar }];
+      });
+    };
 
-      const lowerText = text.toLowerCase();
-      let reply = "That's a great question! Let me analyze this for you.\n\nBased on current Indian tax regulations, I'd recommend consulting the latest CBDT circulars for the most accurate guidance. Would you like me to help with:\n\n1. **Tax calculations** for specific scenarios\n2. **Compliance deadlines** and reminders\n3. **GST-related** queries\n4. **ITR filing** assistance\n\nFeel free to ask anything specific!";
+    try {
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: allMessages }),
+      });
 
-      if (lowerText.includes("gst") || lowerText.includes("deadline")) reply = responses.gst;
-      else if (lowerText.includes("80c") || lowerText.includes("deduction")) reply = responses["80c"];
-      else if (lowerText.includes("tds") || lowerText.includes("professional")) reply = responses.tds;
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
+        throw new Error(errData.error || `Request failed (${resp.status})`);
+      }
 
-      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      if (!resp.body) throw new Error("No response body");
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) upsertAssistant(content);
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to get AI response");
+      setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I encountered an error. Please try again." }]);
+    } finally {
       setIsLoading(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -64,10 +114,9 @@ export default function AIAssistantPage() {
         <h1 className="text-2xl font-bold text-foreground font-['Space_Grotesk'] flex items-center gap-2">
           <Sparkles className="h-6 w-6 text-accent" /> AI Assistant
         </h1>
-        <p className="text-sm text-muted-foreground">Ask anything about tax, compliance, or accounting</p>
+        <p className="text-sm text-muted-foreground">Ask anything about tax, compliance, or accounting — powered by AI</p>
       </div>
 
-      {/* Chat area */}
       <Card className="flex-1 flex flex-col shadow-card overflow-hidden">
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((msg, i) => (
@@ -80,11 +129,17 @@ export default function AIAssistantPage() {
               <div className={`max-w-[75%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
                 msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
               }`}>
-                <div className="whitespace-pre-wrap">{msg.content}</div>
+                {msg.role === "assistant" ? (
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <div className="whitespace-pre-wrap">{msg.content}</div>
+                )}
               </div>
             </div>
           ))}
-          {isLoading && (
+          {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
             <div className="flex gap-3">
               <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
                 <Bot className="h-4 w-4 text-accent" />
@@ -100,34 +155,19 @@ export default function AIAssistantPage() {
           )}
         </div>
 
-        {/* Suggestions */}
         {messages.length <= 1 && (
           <div className="px-4 pb-2 flex flex-wrap gap-2">
             {suggestions.map((s) => (
-              <button
-                key={s}
-                onClick={() => sendMessage(s)}
-                className="text-xs px-3 py-1.5 rounded-full border bg-card text-muted-foreground hover:bg-muted transition-colors"
-              >
+              <button key={s} onClick={() => sendMessage(s)} className="text-xs px-3 py-1.5 rounded-full border bg-card text-muted-foreground hover:bg-muted transition-colors">
                 {s}
               </button>
             ))}
           </div>
         )}
 
-        {/* Input */}
         <div className="p-4 border-t">
-          <form
-            onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
-            className="flex gap-2"
-          >
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about tax, GST, compliance..."
-              className="flex-1"
-              disabled={isLoading}
-            />
+          <form onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} className="flex gap-2">
+            <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask about tax, GST, compliance..." className="flex-1" disabled={isLoading} />
             <Button type="submit" disabled={!input.trim() || isLoading} className="bg-gradient-gold text-gold-foreground hover:opacity-90">
               <Send className="h-4 w-4" />
             </Button>
