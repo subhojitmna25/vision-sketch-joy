@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Users, FileText, TrendingDown, Bot, Settings, LogOut,
+  LayoutDashboard, Users, FileText, TrendingDown, Bot, Shield, LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
