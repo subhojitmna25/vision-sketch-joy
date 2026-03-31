@@ -6,6 +6,7 @@ import ClientsPage from "./pages/dashboard/ClientsPage";
 import InvoicesPage from "./pages/dashboard/InvoicesPage";
 import ExpensesPage from "./pages/dashboard/ExpensesPage";
 import AIAssistantPage from "./pages/dashboard/AIAssistantPage";
+import AdminPage from "./pages/dashboard/AdminPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="invoices" element={<InvoicesPage />} />
               <Route path="expenses" element={<ExpensesPage />} />
               <Route path="ai" element={<AIAssistantPage />} />
+              <Route path="admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
