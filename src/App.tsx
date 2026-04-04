@@ -6,6 +6,7 @@ import ClientsPage from "./pages/dashboard/ClientsPage";
 import InvoicesPage from "./pages/dashboard/InvoicesPage";
 import ExpensesPage from "./pages/dashboard/ExpensesPage";
 import AIAssistantPage from "./pages/dashboard/AIAssistantPage";
+import ToolsPage from "./pages/dashboard/ToolsPage";
 import AdminPage from "./pages/dashboard/AdminPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
