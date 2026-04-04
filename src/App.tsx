@@ -6,6 +6,7 @@ import ClientsPage from "./pages/dashboard/ClientsPage";
 import InvoicesPage from "./pages/dashboard/InvoicesPage";
 import ExpensesPage from "./pages/dashboard/ExpensesPage";
 import AIAssistantPage from "./pages/dashboard/AIAssistantPage";
+import ToolsPage from "./pages/dashboard/ToolsPage";
 import AdminPage from "./pages/dashboard/AdminPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="invoices" element={<InvoicesPage />} />
               <Route path="expenses" element={<ExpensesPage />} />
               <Route path="ai" element={<AIAssistantPage />} />
+              <Route path="tools" element={<ToolsPage />} />
               <Route path="admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
