@@ -99,7 +99,7 @@ export default function AdminPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground">Loading users…</p>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <Table>
               <TableHeader>
