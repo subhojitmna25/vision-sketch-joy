@@ -28,7 +28,7 @@ export default function DashboardOverview() {
     queryKey: ["dash-clients", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase.from("clients").select("id, status, created_at");
-      if (error) throw error;
+      if (error) { toast.error("Failed to load clients"); throw error; }
       return data ?? [];
     },
     enabled: !!user,
