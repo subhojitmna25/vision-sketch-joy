@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, MoreHorizontal, Mail } from "lucide-react";
+import { Search, Plus, Mail } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { TableSkeleton } from "@/components/TableSkeleton";
 
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
@@ -24,7 +25,10 @@ export default function ClientsPage() {
     queryKey: ["clients"],
     queryFn: async () => {
       const { data, error } = await supabase.from("clients").select("*").order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) {
+        toast.error("Failed to load clients: " + error.message);
+        throw error;
+      }
       return data;
     },
   });
@@ -40,7 +44,7 @@ export default function ClientsPage() {
       setNewClient({ name: "", email: "", phone: "", type: "Business" });
       toast.success("Client added!");
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error("Failed to add client: " + err.message),
   });
 
   const filtered = clients.filter((c: any) => c.name.toLowerCase().includes(search.toLowerCase()));
@@ -61,12 +65,12 @@ export default function ClientsPage() {
           <DialogContent>
             <DialogHeader><DialogTitle>Add New Client</DialogTitle></DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); addClient.mutate(); }} className="space-y-4">
-              <div><Label>Name</Label><Input value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} required /></div>
-              <div><Label>Email</Label><Input type="email" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} /></div>
-              <div><Label>Phone</Label><Input value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} /></div>
-              <div><Label>Type</Label>
+              <div><Label htmlFor="client-name">Name</Label><Input id="client-name" aria-label="Client name" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} required /></div>
+              <div><Label htmlFor="client-email">Email</Label><Input id="client-email" aria-label="Client email" type="email" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} /></div>
+              <div><Label htmlFor="client-phone">Phone</Label><Input id="client-phone" aria-label="Client phone" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} /></div>
+              <div><Label htmlFor="client-type">Type</Label>
                 <Select value={newClient.type} onValueChange={(v) => setNewClient({ ...newClient, type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger aria-label="Client type"><SelectValue /></SelectTrigger>
                   <SelectContent><SelectItem value="Business">Business</SelectItem><SelectItem value="Individual">Individual</SelectItem></SelectContent>
                 </Select>
               </div>
@@ -82,12 +86,12 @@ export default function ClientsPage() {
         <CardHeader>
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search clients..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input placeholder="Search clients..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search clients" />
           </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">Loading clients...</p>
+            <TableSkeleton rows={5} cols={4} />
           ) : filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">No clients yet. Add your first client!</p>
           ) : (

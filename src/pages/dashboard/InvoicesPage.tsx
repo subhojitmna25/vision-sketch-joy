@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, Send, Download, FileText, FileSpreadsheet } from "lucide-react";
+import { Search, Plus, Download, FileText, FileSpreadsheet } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { exportCSV, exportExcel, exportPDF } from "@/lib/export-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,9 +14,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { TableSkeleton, CardSkeleton } from "@/components/TableSkeleton";
 
 const statusColor = (s: string) =>
-  s === "Paid" ? "default" : s === "Sent" ? "secondary" : "destructive";
+  s === "Paid" ? "default" as const : s === "Sent" ? "secondary" as const : "destructive" as const;
 
 export default function InvoicesPage() {
   const [search, setSearch] = useState("");
@@ -29,7 +30,10 @@ export default function InvoicesPage() {
     queryKey: ["invoices"],
     queryFn: async () => {
       const { data, error } = await supabase.from("invoices").select("*").order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) {
+        toast.error("Failed to load invoices: " + error.message);
+        throw error;
+      }
       return data;
     },
   });
@@ -52,7 +56,7 @@ export default function InvoicesPage() {
       setNewInv({ invoice_number: "", amount: "", description: "", status: "Draft", due_date: "" });
       toast.success("Invoice created!");
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error("Failed to create invoice: " + err.message),
   });
 
   const totalOutstanding = invoices.filter((i: any) => i.status !== "Paid").reduce((s: number, i: any) => s + Number(i.amount), 0);
@@ -62,14 +66,19 @@ export default function InvoicesPage() {
   );
 
   const handleExport = (format: "csv" | "xlsx" | "pdf") => {
-    const headers = ["Invoice #", "Amount (₹)", "Description", "Due Date", "Status"];
-    const rows = invoices.map((i: any) => [
-      i.invoice_number, Number(i.amount), i.description || "", i.due_date || "—", i.status,
-    ]);
-    const opts = { fileName: "Invoices", headers, rows, title: "Invoices Report" };
-    if (format === "csv") exportCSV(opts);
-    else if (format === "xlsx") exportExcel(opts);
-    else exportPDF(opts);
+    try {
+      const headers = ["Invoice #", "Amount (₹)", "Description", "Due Date", "Status"];
+      const rows = invoices.map((i: any) => [
+        i.invoice_number, Number(i.amount), i.description || "", i.due_date || "—", i.status,
+      ]);
+      const opts = { fileName: "Invoices", headers, rows, title: "Invoices Report" };
+      if (format === "csv") exportCSV(opts);
+      else if (format === "xlsx") exportExcel(opts);
+      else exportPDF(opts);
+      toast.success(`Exported as ${format.toUpperCase()}`);
+    } catch (err: any) {
+      toast.error("Export failed: " + err.message);
+    }
   };
 
   return (
@@ -82,7 +91,7 @@ export default function InvoicesPage() {
         <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline"><Download className="h-4 w-4 mr-2" /> Export</Button>
+              <Button variant="outline" aria-label="Export invoices"><Download className="h-4 w-4 mr-2" /> Export</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => handleExport("csv")}><FileText className="h-4 w-4 mr-2" /> CSV</DropdownMenuItem>
@@ -91,59 +100,65 @@ export default function InvoicesPage() {
             </DropdownMenuContent>
           </DropdownMenu>
           <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-gold text-gold-foreground hover:opacity-90"><Plus className="h-4 w-4 mr-2" /> Create Invoice</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Create Invoice</DialogTitle></DialogHeader>
-            <form onSubmit={(e) => { e.preventDefault(); addInvoice.mutate(); }} className="space-y-4">
-              <div><Label>Invoice Number</Label><Input value={newInv.invoice_number} onChange={(e) => setNewInv({ ...newInv, invoice_number: e.target.value })} required placeholder="INV-001" /></div>
-              <div><Label>Amount (₹)</Label><Input type="number" value={newInv.amount} onChange={(e) => setNewInv({ ...newInv, amount: e.target.value })} required /></div>
-              <div><Label>Description</Label><Input value={newInv.description} onChange={(e) => setNewInv({ ...newInv, description: e.target.value })} /></div>
-              <div><Label>Due Date</Label><Input type="date" value={newInv.due_date} onChange={(e) => setNewInv({ ...newInv, due_date: e.target.value })} /></div>
-              <div><Label>Status</Label>
-                <Select value={newInv.status} onValueChange={(v) => setNewInv({ ...newInv, status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Draft">Draft</SelectItem><SelectItem value="Sent">Sent</SelectItem>
-                    <SelectItem value="Paid">Paid</SelectItem><SelectItem value="Overdue">Overdue</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" className="w-full bg-gradient-gold text-gold-foreground hover:opacity-90" disabled={addInvoice.isPending}>
-                {addInvoice.isPending ? "Creating..." : "Create Invoice"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-gold text-gold-foreground hover:opacity-90"><Plus className="h-4 w-4 mr-2" /> Create Invoice</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Create Invoice</DialogTitle></DialogHeader>
+              <form onSubmit={(e) => { e.preventDefault(); addInvoice.mutate(); }} className="space-y-4">
+                <div><Label htmlFor="inv-number">Invoice Number</Label><Input id="inv-number" aria-label="Invoice number" value={newInv.invoice_number} onChange={(e) => setNewInv({ ...newInv, invoice_number: e.target.value })} required placeholder="INV-001" /></div>
+                <div><Label htmlFor="inv-amount">Amount (₹)</Label><Input id="inv-amount" aria-label="Invoice amount" type="number" value={newInv.amount} onChange={(e) => setNewInv({ ...newInv, amount: e.target.value })} required /></div>
+                <div><Label htmlFor="inv-desc">Description</Label><Input id="inv-desc" aria-label="Invoice description" value={newInv.description} onChange={(e) => setNewInv({ ...newInv, description: e.target.value })} /></div>
+                <div><Label htmlFor="inv-due">Due Date</Label><Input id="inv-due" aria-label="Due date" type="date" value={newInv.due_date} onChange={(e) => setNewInv({ ...newInv, due_date: e.target.value })} /></div>
+                <div><Label>Status</Label>
+                  <Select value={newInv.status} onValueChange={(v) => setNewInv({ ...newInv, status: v })}>
+                    <SelectTrigger aria-label="Invoice status"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Draft">Draft</SelectItem><SelectItem value="Sent">Sent</SelectItem>
+                      <SelectItem value="Paid">Paid</SelectItem><SelectItem value="Overdue">Overdue</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button type="submit" className="w-full bg-gradient-gold text-gold-foreground hover:opacity-90" disabled={addInvoice.isPending}>
+                  {addInvoice.isPending ? "Creating..." : "Create Invoice"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { label: "Total Outstanding", value: `₹${totalOutstanding.toLocaleString("en-IN")}` },
-          { label: "Total Paid", value: `₹${totalPaid.toLocaleString("en-IN")}` },
-          { label: "Total Invoices", value: invoices.length.toString() },
-        ].map((s) => (
-          <Card key={s.label} className="shadow-card">
-            <CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">{s.label}</p>
-              <p className="text-xl font-bold text-foreground mt-1">{s.value}</p>
-            </CardContent>
-          </Card>
-        ))}
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <Card key={`skel-${i}`} className="shadow-card"><CardSkeleton /></Card>
+          ))
+        ) : (
+          [
+            { label: "Total Outstanding", value: `₹${totalOutstanding.toLocaleString("en-IN")}` },
+            { label: "Total Paid", value: `₹${totalPaid.toLocaleString("en-IN")}` },
+            { label: "Total Invoices", value: invoices.length.toString() },
+          ].map((s) => (
+            <Card key={s.label} className="shadow-card">
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">{s.label}</p>
+                <p className="text-xl font-bold text-foreground mt-1">{s.value}</p>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       <Card className="shadow-card">
         <CardHeader>
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search invoices..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input placeholder="Search invoices..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search invoices" />
           </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">Loading invoices...</p>
+            <TableSkeleton rows={5} cols={4} />
           ) : filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">No invoices yet. Create your first!</p>
           ) : (
