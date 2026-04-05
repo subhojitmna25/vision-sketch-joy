@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, TrendingDown } from "lucide-react";
+import { Plus, TrendingDown, Download, FileText, FileSpreadsheet } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { exportCSV, exportExcel, exportPDF } from "@/lib/export-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -53,6 +55,17 @@ export default function ExpensesPage() {
 
   const total = expenses.reduce((s: number, e: any) => s + Number(e.amount), 0);
 
+  const handleExport = (format: "csv" | "xlsx" | "pdf") => {
+    const headers = ["Description", "Category", "Amount (₹)", "Date", "Vendor", "Status"];
+    const rows = expenses.map((e: any) => [
+      e.description || "", e.category, Number(e.amount), e.date, e.vendor || "", e.status,
+    ]);
+    const opts = { fileName: "Expenses", headers, rows, title: "Expenses Report" };
+    if (format === "csv") exportCSV(opts);
+    else if (format === "xlsx") exportExcel(opts);
+    else exportPDF(opts);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -60,7 +73,18 @@ export default function ExpensesPage() {
           <h1 className="text-2xl font-bold text-foreground font-['Space_Grotesk']">Expenses</h1>
           <p className="text-sm text-muted-foreground">Track and categorize your practice expenses</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline"><Download className="h-4 w-4 mr-2" /> Export</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleExport("csv")}><FileText className="h-4 w-4 mr-2" /> CSV</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("xlsx")}><FileSpreadsheet className="h-4 w-4 mr-2" /> Excel</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("pdf")}><FileText className="h-4 w-4 mr-2" /> PDF</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-gold text-gold-foreground hover:opacity-90"><Plus className="h-4 w-4 mr-2" /> Add Expense</Button>
           </DialogTrigger>
@@ -83,6 +107,7 @@ export default function ExpensesPage() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

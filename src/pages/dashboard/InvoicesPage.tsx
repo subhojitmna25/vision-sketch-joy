@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, Send, Download } from "lucide-react";
+import { Search, Plus, Send, Download, FileText, FileSpreadsheet } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { exportCSV, exportExcel, exportPDF } from "@/lib/export-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -59,6 +61,17 @@ export default function InvoicesPage() {
     i.invoice_number.toLowerCase().includes(search.toLowerCase()) || (i.description || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleExport = (format: "csv" | "xlsx" | "pdf") => {
+    const headers = ["Invoice #", "Amount (₹)", "Description", "Due Date", "Status"];
+    const rows = invoices.map((i: any) => [
+      i.invoice_number, Number(i.amount), i.description || "", i.due_date || "—", i.status,
+    ]);
+    const opts = { fileName: "Invoices", headers, rows, title: "Invoices Report" };
+    if (format === "csv") exportCSV(opts);
+    else if (format === "xlsx") exportExcel(opts);
+    else exportPDF(opts);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -66,7 +79,18 @@ export default function InvoicesPage() {
           <h1 className="text-2xl font-bold text-foreground font-['Space_Grotesk']">Invoices</h1>
           <p className="text-sm text-muted-foreground">Manage and track all invoices</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline"><Download className="h-4 w-4 mr-2" /> Export</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleExport("csv")}><FileText className="h-4 w-4 mr-2" /> CSV</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("xlsx")}><FileSpreadsheet className="h-4 w-4 mr-2" /> Excel</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("pdf")}><FileText className="h-4 w-4 mr-2" /> PDF</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-gold text-gold-foreground hover:opacity-90"><Plus className="h-4 w-4 mr-2" /> Create Invoice</Button>
           </DialogTrigger>
@@ -92,6 +116,7 @@ export default function InvoicesPage() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
