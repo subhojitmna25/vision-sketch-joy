@@ -10,6 +10,7 @@ import ToolsPage from "./pages/dashboard/ToolsPage";
 import AdminPage from "./pages/dashboard/AdminPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AuthProvider } from "./contexts/AuthContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -27,16 +28,16 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-              <Route index element={<DashboardOverview />} />
-              <Route path="clients" element={<ClientsPage />} />
-              <Route path="invoices" element={<InvoicesPage />} />
-              <Route path="expenses" element={<ExpensesPage />} />
-              <Route path="ai" element={<AIAssistantPage />} />
-              <Route path="tools" element={<ToolsPage />} />
-              <Route path="admin" element={<AdminPage />} />
+            <Route path="/" element={<ErrorBoundary fallbackTitle="Landing page error"><LandingPage /></ErrorBoundary>} />
+            <Route path="/auth" element={<ErrorBoundary fallbackTitle="Authentication error"><AuthPage /></ErrorBoundary>} />
+            <Route path="/dashboard" element={<ProtectedRoute><ErrorBoundary fallbackTitle="Dashboard error"><DashboardLayout /></ErrorBoundary></ProtectedRoute>}>
+              <Route index element={<ErrorBoundary><DashboardOverview /></ErrorBoundary>} />
+              <Route path="clients" element={<ErrorBoundary><ClientsPage /></ErrorBoundary>} />
+              <Route path="invoices" element={<ErrorBoundary><InvoicesPage /></ErrorBoundary>} />
+              <Route path="expenses" element={<ErrorBoundary><ExpensesPage /></ErrorBoundary>} />
+              <Route path="ai" element={<ErrorBoundary><AIAssistantPage /></ErrorBoundary>} />
+              <Route path="tools" element={<ErrorBoundary><ToolsPage /></ErrorBoundary>} />
+              <Route path="admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
