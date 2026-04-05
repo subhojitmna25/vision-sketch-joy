@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { TableSkeleton } from "@/components/TableSkeleton";
 
 interface AdminUser {
   user_id: string;
@@ -98,7 +99,7 @@ export default function AdminPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground">Loading users…</p>
+            <TableSkeleton rows={5} cols={5} />
           ) : (
             <Table>
               <TableHeader>

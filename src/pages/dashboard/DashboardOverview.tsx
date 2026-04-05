@@ -1,11 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp, Users, FileText, IndianRupee, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react";
+import { TrendingUp, Users, FileText, IndianRupee, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { format, subMonths, startOfMonth } from "date-fns";
-
+import { toast } from "sonner";
+import { DashboardSkeleton } from "@/components/TableSkeleton";
 const COLORS = [
   "hsl(40, 90%, 50%)",
   "hsl(222, 60%, 18%)",
@@ -27,7 +28,7 @@ export default function DashboardOverview() {
     queryKey: ["dash-clients", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase.from("clients").select("id, status, created_at");
-      if (error) throw error;
+      if (error) { toast.error("Failed to load clients"); throw error; }
       return data ?? [];
     },
     enabled: !!user,
@@ -122,11 +123,7 @@ export default function DashboardOverview() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-accent" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (

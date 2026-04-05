@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { TableSkeleton, CardSkeleton } from "@/components/TableSkeleton";
 
 const categories = ["Rent", "Software", "Salaries", "Utilities", "Travel", "Marketing", "Miscellaneous"];
 
@@ -27,7 +28,10 @@ export default function ExpensesPage() {
     queryKey: ["expenses"],
     queryFn: async () => {
       const { data, error } = await supabase.from("expenses").select("*").order("date", { ascending: false });
-      if (error) throw error;
+      if (error) {
+        toast.error("Failed to load expenses: " + error.message);
+        throw error;
+      }
       return data;
     },
   });
@@ -50,20 +54,25 @@ export default function ExpensesPage() {
       setNewExp({ description: "", category: "Miscellaneous", amount: "", date: "", vendor: "" });
       toast.success("Expense added!");
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error("Failed to add expense: " + err.message),
   });
 
   const total = expenses.reduce((s: number, e: any) => s + Number(e.amount), 0);
 
   const handleExport = (format: "csv" | "xlsx" | "pdf") => {
-    const headers = ["Description", "Category", "Amount (₹)", "Date", "Vendor", "Status"];
-    const rows = expenses.map((e: any) => [
-      e.description || "", e.category, Number(e.amount), e.date, e.vendor || "", e.status,
-    ]);
-    const opts = { fileName: "Expenses", headers, rows, title: "Expenses Report" };
-    if (format === "csv") exportCSV(opts);
-    else if (format === "xlsx") exportExcel(opts);
-    else exportPDF(opts);
+    try {
+      const headers = ["Description", "Category", "Amount (₹)", "Date", "Vendor", "Status"];
+      const rows = expenses.map((e: any) => [
+        e.description || "", e.category, Number(e.amount), e.date, e.vendor || "", e.status,
+      ]);
+      const opts = { fileName: "Expenses", headers, rows, title: "Expenses Report" };
+      if (format === "csv") exportCSV(opts);
+      else if (format === "xlsx") exportExcel(opts);
+      else exportPDF(opts);
+      toast.success(`Exported as ${format.toUpperCase()}`);
+    } catch (err: any) {
+      toast.error("Export failed: " + err.message);
+    }
   };
 
   return (
@@ -76,7 +85,7 @@ export default function ExpensesPage() {
         <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline"><Download className="h-4 w-4 mr-2" /> Export</Button>
+              <Button variant="outline" aria-label="Export expenses"><Download className="h-4 w-4 mr-2" /> Export</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => handleExport("csv")}><FileText className="h-4 w-4 mr-2" /> CSV</DropdownMenuItem>
@@ -85,46 +94,50 @@ export default function ExpensesPage() {
             </DropdownMenuContent>
           </DropdownMenu>
           <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-gold text-gold-foreground hover:opacity-90"><Plus className="h-4 w-4 mr-2" /> Add Expense</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Add Expense</DialogTitle></DialogHeader>
-            <form onSubmit={(e) => { e.preventDefault(); addExpense.mutate(); }} className="space-y-4">
-              <div><Label>Description</Label><Input value={newExp.description} onChange={(e) => setNewExp({ ...newExp, description: e.target.value })} required /></div>
-              <div><Label>Amount (₹)</Label><Input type="number" value={newExp.amount} onChange={(e) => setNewExp({ ...newExp, amount: e.target.value })} required /></div>
-              <div><Label>Category</Label>
-                <Select value={newExp.category} onValueChange={(v) => setNewExp({ ...newExp, category: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div><Label>Date</Label><Input type="date" value={newExp.date} onChange={(e) => setNewExp({ ...newExp, date: e.target.value })} /></div>
-              <div><Label>Vendor</Label><Input value={newExp.vendor} onChange={(e) => setNewExp({ ...newExp, vendor: e.target.value })} /></div>
-              <Button type="submit" className="w-full bg-gradient-gold text-gold-foreground hover:opacity-90" disabled={addExpense.isPending}>
-                {addExpense.isPending ? "Adding..." : "Add Expense"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-gold text-gold-foreground hover:opacity-90"><Plus className="h-4 w-4 mr-2" /> Add Expense</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Add Expense</DialogTitle></DialogHeader>
+              <form onSubmit={(e) => { e.preventDefault(); addExpense.mutate(); }} className="space-y-4">
+                <div><Label htmlFor="exp-desc">Description</Label><Input id="exp-desc" aria-label="Expense description" value={newExp.description} onChange={(e) => setNewExp({ ...newExp, description: e.target.value })} required /></div>
+                <div><Label htmlFor="exp-amount">Amount (₹)</Label><Input id="exp-amount" aria-label="Expense amount" type="number" value={newExp.amount} onChange={(e) => setNewExp({ ...newExp, amount: e.target.value })} required /></div>
+                <div><Label>Category</Label>
+                  <Select value={newExp.category} onValueChange={(v) => setNewExp({ ...newExp, category: v })}>
+                    <SelectTrigger aria-label="Expense category"><SelectValue /></SelectTrigger>
+                    <SelectContent>{categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div><Label htmlFor="exp-date">Date</Label><Input id="exp-date" aria-label="Expense date" type="date" value={newExp.date} onChange={(e) => setNewExp({ ...newExp, date: e.target.value })} /></div>
+                <div><Label htmlFor="exp-vendor">Vendor</Label><Input id="exp-vendor" aria-label="Vendor name" value={newExp.vendor} onChange={(e) => setNewExp({ ...newExp, vendor: e.target.value })} /></div>
+                <Button type="submit" className="w-full bg-gradient-gold text-gold-foreground hover:opacity-90" disabled={addExpense.isPending}>
+                  {addExpense.isPending ? "Adding..." : "Add Expense"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card className="shadow-card">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2"><TrendingDown className="h-4 w-4 text-accent" /><p className="text-sm text-muted-foreground">Total Expenses</p></div>
-            <p className="text-xl font-bold text-foreground mt-1">₹{total.toLocaleString("en-IN")}</p>
-            <p className="text-xs text-muted-foreground">{expenses.length} transactions</p>
-          </CardContent>
-        </Card>
+        {isLoading ? (
+          <Card className="shadow-card"><CardSkeleton /></Card>
+        ) : (
+          <Card className="shadow-card">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2"><TrendingDown className="h-4 w-4 text-accent" /><p className="text-sm text-muted-foreground">Total Expenses</p></div>
+              <p className="text-xl font-bold text-foreground mt-1">₹{total.toLocaleString("en-IN")}</p>
+              <p className="text-xs text-muted-foreground">{expenses.length} transactions</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Card className="shadow-card">
         <CardHeader><CardTitle className="text-base font-['Space_Grotesk']">All Expenses</CardTitle></CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">Loading expenses...</p>
+            <TableSkeleton rows={5} cols={5} />
           ) : expenses.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">No expenses yet. Add your first!</p>
           ) : (
