@@ -55,6 +55,17 @@ export default function ExpensesPage() {
 
   const total = expenses.reduce((s: number, e: any) => s + Number(e.amount), 0);
 
+  const handleExport = (format: "csv" | "xlsx" | "pdf") => {
+    const headers = ["Description", "Category", "Amount (₹)", "Date", "Vendor", "Status"];
+    const rows = expenses.map((e: any) => [
+      e.description || "", e.category, Number(e.amount), e.date, e.vendor || "", e.status,
+    ]);
+    const opts = { fileName: "Expenses", headers, rows, title: "Expenses Report" };
+    if (format === "csv") exportCSV(opts);
+    else if (format === "xlsx") exportExcel(opts);
+    else exportPDF(opts);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

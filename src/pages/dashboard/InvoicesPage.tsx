@@ -61,6 +61,17 @@ export default function InvoicesPage() {
     i.invoice_number.toLowerCase().includes(search.toLowerCase()) || (i.description || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleExport = (format: "csv" | "xlsx" | "pdf") => {
+    const headers = ["Invoice #", "Amount (₹)", "Description", "Due Date", "Status"];
+    const rows = invoices.map((i: any) => [
+      i.invoice_number, Number(i.amount), i.description || "", i.due_date || "—", i.status,
+    ]);
+    const opts = { fileName: "Invoices", headers, rows, title: "Invoices Report" };
+    if (format === "csv") exportCSV(opts);
+    else if (format === "xlsx") exportExcel(opts);
+    else exportPDF(opts);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
