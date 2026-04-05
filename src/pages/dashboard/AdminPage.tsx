@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { TableSkeleton } from "@/components/TableSkeleton";
 
 interface AdminUser {
   user_id: string;
