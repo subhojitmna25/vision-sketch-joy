@@ -1,11 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp, Users, FileText, IndianRupee, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react";
+import { TrendingUp, Users, FileText, IndianRupee, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { format, subMonths, startOfMonth } from "date-fns";
-
+import { toast } from "sonner";
+import { DashboardSkeleton } from "@/components/TableSkeleton";
 const COLORS = [
   "hsl(40, 90%, 50%)",
   "hsl(222, 60%, 18%)",
