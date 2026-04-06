@@ -38,6 +38,7 @@ const App = () => (
               <Route path="invoices" element={<ErrorBoundary><InvoicesPage /></ErrorBoundary>} />
               <Route path="expenses" element={<ErrorBoundary><ExpensesPage /></ErrorBoundary>} />
               <Route path="ai" element={<ErrorBoundary><AIAssistantPage /></ErrorBoundary>} />
+              <Route path="compliance" element={<ErrorBoundary><CompliancePage /></ErrorBoundary>} />
               <Route path="tools" element={<ErrorBoundary><ToolsPage /></ErrorBoundary>} />
               <Route path="admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
             </Route>
