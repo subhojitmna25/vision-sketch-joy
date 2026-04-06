@@ -8,6 +8,7 @@ import InvoicesPage from "./pages/dashboard/InvoicesPage";
 import ExpensesPage from "./pages/dashboard/ExpensesPage";
 import AIAssistantPage from "./pages/dashboard/AIAssistantPage";
 import ToolsPage from "./pages/dashboard/ToolsPage";
+import CompliancePage from "./pages/dashboard/CompliancePage";
 import AdminPage from "./pages/dashboard/AdminPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="invoices" element={<ErrorBoundary><InvoicesPage /></ErrorBoundary>} />
               <Route path="expenses" element={<ErrorBoundary><ExpensesPage /></ErrorBoundary>} />
               <Route path="ai" element={<ErrorBoundary><AIAssistantPage /></ErrorBoundary>} />
+              <Route path="compliance" element={<ErrorBoundary><CompliancePage /></ErrorBoundary>} />
               <Route path="tools" element={<ErrorBoundary><ToolsPage /></ErrorBoundary>} />
               <Route path="admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
             </Route>
