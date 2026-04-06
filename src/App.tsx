@@ -1,4 +1,5 @@
 import LandingPage from "./pages/LandingPage";
+import FloatingChat from "./components/FloatingChat";
 import AuthPage from "./pages/AuthPage";
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardOverview from "./pages/dashboard/DashboardOverview";
@@ -41,6 +42,7 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <FloatingChat />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
