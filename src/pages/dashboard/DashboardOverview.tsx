@@ -174,14 +174,9 @@ export default function DashboardOverview() {
   const recentTx = transactions.slice(0, 15);
 
   const handleExport = () => {
-    const rows = transactions.map(t => ({
-      Date: t.date,
-      Description: t.description,
-      Category: t.category,
-      Amount: t.amount,
-      Type: t.type,
-    }));
-    exportExcel(rows, `dashboard-data-${format(now, "yyyy-MM-dd")}`, "Transactions");
+    const headers = ["Date", "Description", "Category", "Amount", "Type"];
+    const rows = transactions.map(t => [t.date, t.description, t.category, t.amount, t.type] as (string | number)[]);
+    exportExcel({ fileName: `dashboard-data-${format(now, "yyyy-MM-dd")}`, headers, rows });
     toast.success("Excel exported");
   };
 
