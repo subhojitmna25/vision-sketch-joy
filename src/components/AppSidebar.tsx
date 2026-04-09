@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Users, FileText, TrendingDown, Bot, Shield, LogOut, Calculator, CalendarDays,
+  LayoutDashboard, Users, FileText, TrendingDown, Bot, Shield, LogOut, Calculator, CalendarDays, TrendingUp, BarChart3,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
