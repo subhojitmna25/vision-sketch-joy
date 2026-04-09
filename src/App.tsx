@@ -21,7 +21,11 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-
+import BankAnalyzer from "./pages/tools/BankAnalyzer";
+import LBOAnalyzer from "./pages/tools/LBOAnalyzer";
+import InvestmentAnalyzer from "./pages/tools/InvestmentAnalyzer";
+import FinancialCalculators from "./pages/tools/FinancialCalculators";
+import TaxOptimizer from "./pages/tools/TaxOptimizer";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -45,6 +49,11 @@ const App = () => (
               <Route path="tools/lbo" element={<ErrorBoundary><LBOAnalysisPage /></ErrorBoundary>} />
               <Route path="tools/investment" element={<ErrorBoundary><InvestmentAnalysisPage /></ErrorBoundary>} />
               <Route path="admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
+              <Route path="/tools/bank-analyzer" element={<BankAnalyzer />} />
+              <Route path="/tools/lbo" element={<LBOAnalyzer />} />
+              <Route path="/tools/investment" element={<InvestmentAnalyzer />} />
+              <Route path="/tools/calculators" element={<FinancialCalculators />} />
+             <Route path="/tools/tax-optimizer" element={<TaxOptimizer />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
