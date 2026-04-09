@@ -10,6 +10,8 @@ import AIAssistantPage from "./pages/dashboard/AIAssistantPage";
 import ToolsPage from "./pages/dashboard/ToolsPage";
 import CompliancePage from "./pages/dashboard/CompliancePage";
 import AdminPage from "./pages/dashboard/AdminPage";
+import LBOAnalysisPage from "./pages/dashboard/LBOAnalysisPage";
+import InvestmentAnalysisPage from "./pages/dashboard/InvestmentAnalysisPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -40,6 +42,8 @@ const App = () => (
               <Route path="ai" element={<ErrorBoundary><AIAssistantPage /></ErrorBoundary>} />
               <Route path="compliance" element={<ErrorBoundary><CompliancePage /></ErrorBoundary>} />
               <Route path="tools" element={<ErrorBoundary><ToolsPage /></ErrorBoundary>} />
+              <Route path="tools/lbo" element={<ErrorBoundary><LBOAnalysisPage /></ErrorBoundary>} />
+              <Route path="tools/investment" element={<ErrorBoundary><InvestmentAnalysisPage /></ErrorBoundary>} />
               <Route path="admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
             </Route>
             <Route path="*" element={<NotFound />} />

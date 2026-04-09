@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Users, FileText, TrendingDown, Bot, Shield, LogOut, Calculator, CalendarDays,
+  LayoutDashboard, Users, FileText, TrendingDown, Bot, Shield, LogOut, Calculator, CalendarDays, TrendingUp, BarChart3,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -20,6 +20,8 @@ const mainItems = [
   { title: "Compliance", url: "/dashboard/compliance", icon: CalendarDays },
   { title: "AI Assistant", url: "/dashboard/ai", icon: Bot },
   { title: "Tools", url: "/dashboard/tools", icon: Calculator },
+  { title: "LBO Analysis", url: "/dashboard/tools/lbo", icon: TrendingUp },
+  { title: "Investment", url: "/dashboard/tools/investment", icon: BarChart3 },
 ];
 
 export function AppSidebar() {
