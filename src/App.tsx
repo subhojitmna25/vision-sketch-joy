@@ -21,11 +21,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import BankAnalyzer from "./pages/tools/BankAnalyzer";
-import LBOAnalyzer from "./pages/tools/LBOAnalyzer";
-import InvestmentAnalyzer from "./pages/tools/InvestmentAnalyzer";
-import FinancialCalculators from "./pages/tools/FinancialCalculators";
-import TaxOptimizer from "./pages/tools/TaxOptimizer";
 const queryClient = new QueryClient();
 
 const App = () => (
