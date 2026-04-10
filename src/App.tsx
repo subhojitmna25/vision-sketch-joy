@@ -44,11 +44,6 @@ const App = () => (
               <Route path="tools/lbo" element={<ErrorBoundary><LBOAnalysisPage /></ErrorBoundary>} />
               <Route path="tools/investment" element={<ErrorBoundary><InvestmentAnalysisPage /></ErrorBoundary>} />
               <Route path="admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
-              <Route path="/tools/bank-analyzer" element={<BankAnalyzer />} />
-              <Route path="/tools/lbo" element={<LBOAnalyzer />} />
-              <Route path="/tools/investment" element={<InvestmentAnalyzer />} />
-              <Route path="/tools/calculators" element={<FinancialCalculators />} />
-             <Route path="/tools/tax-optimizer" element={<TaxOptimizer />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
