@@ -25,7 +25,14 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import ValuationHub from "./pages/valuation/ValuationHub";
+import RealEstateValuation from "./pages/valuation/RealEstateValuation";
+import BusinessValuation from "./pages/valuation/BusinessValuation";
 
+// Inside <Routes>:
+<Route path="/valuation" element={<ValuationHub />} />
+<Route path="/valuation/real-estate" element={<RealEstateValuation />} />
+<Route path="/valuation/business" element={<BusinessValuation />} />
 const queryClient = new QueryClient();
 
 const App = () => (
