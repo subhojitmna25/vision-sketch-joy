@@ -12,6 +12,10 @@ import CompliancePage from "./pages/dashboard/CompliancePage";
 import AdminPage from "./pages/dashboard/AdminPage";
 import LBOAnalysisPage from "./pages/dashboard/LBOAnalysisPage";
 import InvestmentAnalysisPage from "./pages/dashboard/InvestmentAnalysisPage";
+import BankAnalyzer from "./pages/tools/BankAnalyzer";
+import LBOAnalyzer from "./pages/tools/LBOAnalyzer";
+import InvestmentAnalyzer from "./pages/tools/InvestmentAnalyzer";
+import TaxOptimizer from "./pages/tools/TaxOptimizer";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -21,6 +25,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -43,6 +48,10 @@ const App = () => (
               <Route path="tools" element={<ErrorBoundary><ToolsPage /></ErrorBoundary>} />
               <Route path="tools/lbo" element={<ErrorBoundary><LBOAnalysisPage /></ErrorBoundary>} />
               <Route path="tools/investment" element={<ErrorBoundary><InvestmentAnalysisPage /></ErrorBoundary>} />
+              <Route path="tools/bank-analyzer" element={<ErrorBoundary><BankAnalyzer /></ErrorBoundary>} />
+              <Route path="tools/lbo-analyzer" element={<ErrorBoundary><LBOAnalyzer /></ErrorBoundary>} />
+              <Route path="tools/investment-analyzer" element={<ErrorBoundary><InvestmentAnalyzer /></ErrorBoundary>} />
+              <Route path="tools/tax-optimizer" element={<ErrorBoundary><TaxOptimizer /></ErrorBoundary>} />
               <Route path="admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
             </Route>
             <Route path="*" element={<NotFound />} />
