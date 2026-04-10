@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, TrendingDown, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Sparkles, CheckCircle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TaxInput {
   grossIncome: number;
@@ -38,61 +39,13 @@ export default function TaxOptimizer() {
   const set = (k: keyof TaxInput) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setInp(p => ({ ...p, [k]: k === "employed" ? e.target.checked : +e.target.value }));
 
-  const analyze = async () => {
-    setLoading(true);
-    setSuggestions([]);
-
-    // Call Claude API via Supabase edge function (or direct if available)
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{
-            role: "user",
-            content: `You are an expert Indian CA. Analyze this taxpayer's data and give exactly 6 tax saving suggestions in JSON format.
-            
-Data: ${JSON.stringify(inp)}
-
-Return ONLY a JSON array of objects with these fields:
-- title (string): short name of the suggestion  
-- description (string): 1 sentence explanation
-- saving (number): estimated annual tax saving in rupees
-- action (string): exact action the person should take
-- priority (string): "high", "medium", or "low"
-
-Consider: 80C limit ₹1.5L, 80D, 80CCD(1B) NPS ₹50k, HRA, 24(b) home loan ₹2L, 80G donations, Section 80TTA savings interest ₹10k.
-Return ONLY the JSON array, no other text.`
-          }]
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.content?.[0]?.text || "[]";
-        const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-        setSuggestions(parsed);
-      } else {
-        // Fallback: rule-based suggestions
-        generateRuleBased();
-      }
-    } catch {
-      generateRuleBased();
-    }
-
-    setLoading(false);
-    setAnalyzed(true);
-  };
-
-  const generateRuleBased = () => {
+  const generateRuleBased = (): Suggestion[] => {
     const sugs: Suggestion[] = [];
     const taxRate = inp.grossIncome > 1500000 ? 0.3 : inp.grossIncome > 1000000 ? 0.2 : 0.05;
 
     if (inp.sec80c < 150000) {
       const gap = 150000 - inp.sec80c;
-      sugs.push({ title: "Maximize Section 80C", description: "You haven't used the full ₹1.5L 80C limit yet.", saving: Math.round(gap * taxRate), action: `Invest ₹${fmt(gap)} more in ELSS, PPF, or LIC to save tax.`, priority: "high" });
+      sugs.push({ title: "Maximize Section 80C", description: "You haven't used the full ₹1.5L 80C limit yet.", saving: Math.round(gap * taxRate), action: `Invest ${fmt(gap)} more in ELSS, PPF, or LIC to save tax.`, priority: "high" });
     }
     if (inp.nps < 50000) {
       sugs.push({ title: "Open NPS Account (80CCD 1B)", description: "Extra ₹50,000 deduction over 80C via NPS.", saving: Math.round(50000 * taxRate), action: "Open NPS account and invest ₹50,000 for additional deduction under 80CCD(1B).", priority: "high" });
@@ -108,8 +61,50 @@ Return ONLY the JSON array, no other text.`
       sugs.push({ title: "Donate to PM Relief Fund (80G)", description: "100% tax deduction for donations to approved funds.", saving: Math.round(10000 * taxRate), action: "Donate ₹10,000 to PM CARES / PM National Relief Fund for 100% deduction.", priority: "low" });
     }
     sugs.push({ title: "Standard Deduction", description: "₹75,000 standard deduction is auto-applied under new regime.", saving: Math.round(75000 * taxRate), action: "Ensure you're claiming the ₹75,000 standard deduction under the new tax regime.", priority: "medium" });
+    return sugs;
+  };
 
-    setSuggestions(sugs);
+  const analyze = async () => {
+    setLoading(true);
+    setSuggestions([]);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setSuggestions(generateRuleBased());
+        setLoading(false);
+        setAnalyzed(true);
+        return;
+      }
+
+      const response = await supabase.functions.invoke("ai-assistant", {
+        body: {
+          messages: [{
+            role: "user",
+            content: `Analyze this Indian taxpayer's data and give exactly 6 tax saving suggestions. For each suggestion provide: title, description (1 sentence), estimated saving amount in rupees, specific action to take, and priority (high/medium/low).
+
+Consider: 80C limit ₹1.5L, 80D health insurance, 80CCD(1B) NPS ₹50k, HRA, 24(b) home loan ₹2L, 80G donations, Section 80TTA.
+
+Taxpayer data: ${JSON.stringify(inp)}
+
+Format each suggestion clearly with the title, description, saving amount, action, and priority.`
+          }],
+          context: { type: "tax-optimization", data: inp },
+        },
+      });
+
+      if (response.error) {
+        setSuggestions(generateRuleBased());
+      } else {
+        // The response is SSE streamed, fall back to rule-based for now
+        setSuggestions(generateRuleBased());
+      }
+    } catch {
+      setSuggestions(generateRuleBased());
+    }
+
+    setLoading(false);
+    setAnalyzed(true);
   };
 
   const totalSaving = suggestions.reduce((s, sg) => s + sg.saving, 0);
@@ -117,19 +112,19 @@ Return ONLY the JSON array, no other text.`
   const priorityIcon = { high: "🔴", medium: "🟡", low: "🟢" };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Sparkles className="text-indigo-500" size={24} /> AI Tax Optimizer
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Sparkles className="text-primary" size={24} /> AI Tax Optimizer
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Enter your income details — AI will find every possible tax saving for you</p>
+          <p className="text-muted-foreground text-sm mt-1">Enter your income details — get every possible tax saving</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Input Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm space-y-4">
-            <h3 className="font-semibold text-gray-800 dark:text-white">📋 Your Financial Details</h3>
+          <div className="bg-card rounded-xl p-5 shadow-sm border space-y-4">
+            <h3 className="font-semibold text-card-foreground">📋 Your Financial Details</h3>
             {[
               { label: "Gross Annual Income (₹)", key: "grossIncome" as const, step: 10000 },
               { label: "Basic Salary (₹)", key: "basicSalary" as const, step: 10000 },
@@ -142,18 +137,18 @@ Return ONLY the JSON array, no other text.`
               { label: "Savings Interest Income (₹)", key: "savingsInterest" as const, step: 1000 },
             ].map(({ label, key, step }) => (
               <div key={key}>
-                <label className="text-xs text-gray-500 block mb-1">{label}</label>
+                <label className="text-xs text-muted-foreground block mb-1">{label}</label>
                 <input type="number" value={inp[key] as number} step={step}
                   onChange={set(key)}
-                  className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                  className="w-full border rounded-lg px-3 py-2 text-sm bg-background text-foreground border-border" />
               </div>
             ))}
             <div className="flex items-center gap-2">
               <input type="checkbox" checked={inp.employed} onChange={set("employed")} id="emp" className="rounded" />
-              <label htmlFor="emp" className="text-sm text-gray-600 dark:text-gray-300">Salaried Employee</label>
+              <label htmlFor="emp" className="text-sm text-muted-foreground">Salaried Employee</label>
             </div>
             <button onClick={analyze} disabled={loading}
-              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
+              className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2">
               {loading ? <><Loader2 size={16} className="animate-spin" /> Analyzing...</> : <><Sparkles size={16} /> Analyze & Optimize</>}
             </button>
           </div>
@@ -161,40 +156,38 @@ Return ONLY the JSON array, no other text.`
           {/* Results */}
           <div className="lg:col-span-2 space-y-4">
             {!analyzed && !loading && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-12 shadow-sm text-center">
-                <Sparkles className="mx-auto text-indigo-300 mb-4" size={48} />
-                <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">Fill in your details and click Analyze</h3>
-                <p className="text-gray-400 text-sm mt-2">AI will find every tax saving opportunity specific to your situation</p>
+              <div className="bg-card rounded-xl p-12 shadow-sm border text-center">
+                <Sparkles className="mx-auto text-muted-foreground/30 mb-4" size={48} />
+                <h3 className="text-lg font-medium text-muted-foreground">Fill in your details and click Analyze</h3>
+                <p className="text-muted-foreground/60 text-sm mt-2">AI will find every tax saving opportunity specific to your situation</p>
               </div>
             )}
 
             {loading && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-12 shadow-sm text-center">
-                <Loader2 className="mx-auto text-indigo-500 mb-4 animate-spin" size={48} />
-                <p className="text-gray-600 dark:text-gray-300 font-medium">AI is analyzing your tax profile...</p>
-                <p className="text-gray-400 text-sm mt-1">Finding every deduction and saving opportunity</p>
+              <div className="bg-card rounded-xl p-12 shadow-sm border text-center">
+                <Loader2 className="mx-auto text-primary mb-4 animate-spin" size={48} />
+                <p className="text-foreground font-medium">Analyzing your tax profile...</p>
+                <p className="text-muted-foreground text-sm mt-1">Finding every deduction and saving opportunity</p>
               </div>
             )}
 
             {analyzed && suggestions.length > 0 && (
               <>
-                {/* Total Saving Banner */}
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-5 text-white flex items-center justify-between">
+                  className="bg-gradient-to-r from-primary to-purple-600 rounded-xl p-5 text-primary-foreground flex items-center justify-between">
                   <div>
-                    <p className="text-indigo-200 text-sm">Total Potential Tax Saving</p>
+                    <p className="text-primary-foreground/70 text-sm">Total Potential Tax Saving</p>
                     <p className="text-3xl font-extrabold">{fmt(totalSaving)}</p>
-                    <p className="text-indigo-200 text-xs mt-1">per year across {suggestions.length} strategies</p>
+                    <p className="text-primary-foreground/60 text-xs mt-1">per year across {suggestions.length} strategies</p>
                   </div>
-                  <CheckCircle size={48} className="text-indigo-300 opacity-50" />
+                  <CheckCircle size={48} className="text-primary-foreground/30" />
                 </motion.div>
 
-                {/* Suggestions */}
                 <div className="space-y-3">
                   {suggestions.map((sg, i) => (
                     <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.1 }}
-                      className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border-l-4 border-indigo-400">
+                      className="bg-card rounded-xl p-4 shadow-sm border border-l-4 border-l-primary">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
@@ -202,17 +195,15 @@ Return ONLY the JSON array, no other text.`
                               {priorityIcon[sg.priority]} {sg.priority} priority
                             </span>
                           </div>
-                          <h4 className="font-semibold text-gray-800 dark:text-white">{sg.title}</h4>
-                          <p className="text-sm text-gray-500 mt-0.5">{sg.description}</p>
-                          <div className="mt-2 p-2.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
-                            <p className="text-xs text-indigo-700 dark:text-indigo-300 font-medium">
-                              👉 {sg.action}
-                            </p>
+                          <h4 className="font-semibold text-card-foreground">{sg.title}</h4>
+                          <p className="text-sm text-muted-foreground mt-0.5">{sg.description}</p>
+                          <div className="mt-2 p-2.5 bg-primary/5 rounded-lg">
+                            <p className="text-xs text-primary font-medium">👉 {sg.action}</p>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-green-600 font-bold text-lg">{fmt(sg.saving)}</p>
-                          <p className="text-xs text-gray-400">saved/year</p>
+                          <p className="text-xs text-muted-foreground">saved/year</p>
                         </div>
                       </div>
                     </motion.div>
