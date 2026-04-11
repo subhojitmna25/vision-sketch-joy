@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, TrendingDown, Bot, Shield, LogOut, Calculator, CalendarDays, TrendingUp, BarChart3,
-  Building2, Sparkles, LineChart,
+  Building2, Sparkles, LineChart, Landmark, Home, Factory, Leaf, Award, Scale, GitMerge, ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -30,6 +30,15 @@ const toolItems = [
   { title: "Tax Optimizer", url: "/dashboard/tools/tax-optimizer", icon: Sparkles },
   { title: "LBO Analyzer", url: "/dashboard/tools/lbo-analyzer", icon: LineChart },
   { title: "Investment Analyzer", url: "/dashboard/tools/investment-analyzer", icon: BarChart3 },
+];
+
+const valuationItems = [
+  { title: "Valuation Hub", url: "/valuation", icon: Landmark },
+  { title: "Real Estate", url: "/valuation/real-estate", icon: Home },
+  { title: "Business", url: "/valuation/business", icon: Factory },
+  { title: "Assets", url: "/valuation/assets", icon: Award },
+  { title: "Agriculture", url: "/valuation/agriculture", icon: Leaf },
+  { title: "Intangibles", url: "/valuation/intangibles", icon: ClipboardList },
 ];
 
 export function AppSidebar() {
@@ -95,6 +104,24 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {toolItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url} activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                      <item.icon className="h-4 w-4 mr-2" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Valuation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {valuationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
