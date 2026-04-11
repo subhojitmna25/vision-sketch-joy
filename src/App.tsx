@@ -32,13 +32,6 @@ import AssetValuation from "./pages/valuation/AssetValuation";
 import AgricultureValuation from "./pages/valuation/AgricultureValuation";
 import IntangibleValuation from "./pages/valuation/IntangibleValuation";
 
-<Route path="/valuation/assets" element={<AssetValuation />} />
-<Route path="/valuation/agriculture" element={<AgricultureValuation />} />
-<Route path="/valuation/intangibles" element={<IntangibleValuation />} />
-// Inside <Routes>:
-<Route path="/valuation" element={<ValuationHub />} />
-<Route path="/valuation/real-estate" element={<RealEstateValuation />} />
-<Route path="/valuation/business" element={<BusinessValuation />} />
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -67,6 +60,12 @@ const App = () => (
               <Route path="tools/tax-optimizer" element={<ErrorBoundary><TaxOptimizer /></ErrorBoundary>} />
               <Route path="admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
             </Route>
+            <Route path="/valuation" element={<ErrorBoundary><ValuationHub /></ErrorBoundary>} />
+            <Route path="/valuation/real-estate" element={<ErrorBoundary><RealEstateValuation /></ErrorBoundary>} />
+            <Route path="/valuation/business" element={<ErrorBoundary><BusinessValuation /></ErrorBoundary>} />
+            <Route path="/valuation/assets" element={<ErrorBoundary><AssetValuation /></ErrorBoundary>} />
+            <Route path="/valuation/agriculture" element={<ErrorBoundary><AgricultureValuation /></ErrorBoundary>} />
+            <Route path="/valuation/intangibles" element={<ErrorBoundary><IntangibleValuation /></ErrorBoundary>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <FloatingChat />
