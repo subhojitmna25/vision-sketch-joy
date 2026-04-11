@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, TrendingDown, Bot, Shield, LogOut, Calculator, CalendarDays, TrendingUp, BarChart3,
-  Building2, Sparkles, LineChart, Landmark, Home, Factory, Leaf, Award, Scale, GitMerge, ClipboardList,
+  Building2, Sparkles, LineChart, Landmark, Home, Factory, Leaf, Award, Scale, GitMerge, ClipboardList, Rocket, HardHat,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -39,6 +39,11 @@ const valuationItems = [
   { title: "Assets", url: "/valuation/assets", icon: Award },
   { title: "Agriculture", url: "/valuation/agriculture", icon: Leaf },
   { title: "Intangibles", url: "/valuation/intangibles", icon: ClipboardList },
+  { title: "Stock & Equity", url: "/valuation/stock", icon: TrendingUp },
+  { title: "Startup", url: "/valuation/startup", icon: Rocket },
+  { title: "Infrastructure", url: "/valuation/infrastructure", icon: HardHat },
+  { title: "Legal & Court", url: "/valuation/legal", icon: Scale },
+  { title: "M&A", url: "/valuation/merger", icon: GitMerge },
 ];
 
 export function AppSidebar() {

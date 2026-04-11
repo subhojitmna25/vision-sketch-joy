@@ -31,6 +31,11 @@ import BusinessValuation from "./pages/valuation/BusinessValuation";
 import AssetValuation from "./pages/valuation/valuation/AssetValuation";
 import AgricultureValuation from "./pages/valuation/valuation/AgricultureValuation";
 import IntangibleValuation from "./pages/valuation/valuation/IntangibleValuation";
+import StockValuation from "./pages/valuation/StockValuation";
+import StartupValuation from "./pages/valuation/StartupValuation";
+import InfrastructureValuation from "./pages/valuation/InfrastructureValuation";
+import LegalValuation from "./pages/valuation/LegalValuation";
+import MergerValuation from "./pages/valuation/MergerValuation";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +71,11 @@ const App = () => (
             <Route path="/valuation/assets" element={<ErrorBoundary><AssetValuation /></ErrorBoundary>} />
             <Route path="/valuation/agriculture" element={<ErrorBoundary><AgricultureValuation /></ErrorBoundary>} />
             <Route path="/valuation/intangibles" element={<ErrorBoundary><IntangibleValuation /></ErrorBoundary>} />
+            <Route path="/valuation/stock" element={<ErrorBoundary><StockValuation /></ErrorBoundary>} />
+            <Route path="/valuation/startup" element={<ErrorBoundary><StartupValuation /></ErrorBoundary>} />
+            <Route path="/valuation/infrastructure" element={<ErrorBoundary><InfrastructureValuation /></ErrorBoundary>} />
+            <Route path="/valuation/legal" element={<ErrorBoundary><LegalValuation /></ErrorBoundary>} />
+            <Route path="/valuation/merger" element={<ErrorBoundary><MergerValuation /></ErrorBoundary>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <FloatingChat />
