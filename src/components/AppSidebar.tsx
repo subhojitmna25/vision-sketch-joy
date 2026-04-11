@@ -32,6 +32,15 @@ const toolItems = [
   { title: "Investment Analyzer", url: "/dashboard/tools/investment-analyzer", icon: BarChart3 },
 ];
 
+const valuationItems = [
+  { title: "Valuation Hub", url: "/valuation", icon: Landmark },
+  { title: "Real Estate", url: "/valuation/real-estate", icon: Home },
+  { title: "Business", url: "/valuation/business", icon: Factory },
+  { title: "Assets", url: "/valuation/assets", icon: Award },
+  { title: "Agriculture", url: "/valuation/agriculture", icon: Leaf },
+  { title: "Intangibles", url: "/valuation/intangibles", icon: ClipboardList },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
