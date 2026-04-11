@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, TrendingDown, Bot, Shield, LogOut, Calculator, CalendarDays, TrendingUp, BarChart3,
-  Building2, Sparkles, LineChart,
+  Building2, Sparkles, LineChart, Landmark, Home, Factory, Leaf, Award, Scale, GitMerge, ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
