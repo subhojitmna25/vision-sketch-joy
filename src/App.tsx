@@ -28,7 +28,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ValuationHub from "./pages/valuation/ValuationHub";
 import RealEstateValuation from "./pages/valuation/RealEstateValuation";
 import BusinessValuation from "./pages/valuation/BusinessValuation";
+import AssetValuation from "./pages/valuation/AssetValuation";
+import AgricultureValuation from "./pages/valuation/AgricultureValuation";
+import IntangibleValuation from "./pages/valuation/IntangibleValuation";
 
+<Route path="/valuation/assets" element={<AssetValuation />} />
+<Route path="/valuation/agriculture" element={<AgricultureValuation />} />
+<Route path="/valuation/intangibles" element={<IntangibleValuation />} />
 // Inside <Routes>:
 <Route path="/valuation" element={<ValuationHub />} />
 <Route path="/valuation/real-estate" element={<RealEstateValuation />} />
