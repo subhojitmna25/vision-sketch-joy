@@ -70,6 +70,11 @@ const App = () => (
             <Route path="/valuation/assets" element={<ErrorBoundary><AssetValuation /></ErrorBoundary>} />
             <Route path="/valuation/agriculture" element={<ErrorBoundary><AgricultureValuation /></ErrorBoundary>} />
             <Route path="/valuation/intangibles" element={<ErrorBoundary><IntangibleValuation /></ErrorBoundary>} />
+            <Route path="/valuation/stock" element={<ErrorBoundary><StockValuation /></ErrorBoundary>} />
+            <Route path="/valuation/startup" element={<ErrorBoundary><StartupValuation /></ErrorBoundary>} />
+            <Route path="/valuation/infrastructure" element={<ErrorBoundary><InfrastructureValuation /></ErrorBoundary>} />
+            <Route path="/valuation/legal" element={<ErrorBoundary><LegalValuation /></ErrorBoundary>} />
+            <Route path="/valuation/merger" element={<ErrorBoundary><MergerValuation /></ErrorBoundary>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <FloatingChat />

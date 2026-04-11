@@ -39,6 +39,11 @@ const valuationItems = [
   { title: "Assets", url: "/valuation/assets", icon: Award },
   { title: "Agriculture", url: "/valuation/agriculture", icon: Leaf },
   { title: "Intangibles", url: "/valuation/intangibles", icon: ClipboardList },
+  { title: "Stock & Equity", url: "/valuation/stock", icon: StockIcon },
+  { title: "Startup", url: "/valuation/startup", icon: Rocket },
+  { title: "Infrastructure", url: "/valuation/infrastructure", icon: HardHat },
+  { title: "Legal & Court", url: "/valuation/legal", icon: Scale },
+  { title: "M&A", url: "/valuation/merger", icon: GitMerge },
 ];
 
 export function AppSidebar() {
