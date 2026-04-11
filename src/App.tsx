@@ -28,9 +28,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ValuationHub from "./pages/valuation/ValuationHub";
 import RealEstateValuation from "./pages/valuation/RealEstateValuation";
 import BusinessValuation from "./pages/valuation/BusinessValuation";
-import AssetValuation from "./pages/valuation/AssetValuation";
-import AgricultureValuation from "./pages/valuation/AgricultureValuation";
-import IntangibleValuation from "./pages/valuation/IntangibleValuation";
+import AssetValuation from "./pages/valuation/valuation/AssetValuation";
+import AgricultureValuation from "./pages/valuation/valuation/AgricultureValuation";
+import IntangibleValuation from "./pages/valuation/valuation/IntangibleValuation";
 
 const queryClient = new QueryClient();
 
