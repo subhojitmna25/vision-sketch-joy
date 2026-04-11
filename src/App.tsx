@@ -30,7 +30,11 @@ import RealEstateValuation from "./pages/valuation/RealEstateValuation";
 import BusinessValuation from "./pages/valuation/BusinessValuation";
 import AssetValuation from "./pages/valuation/valuation/AssetValuation";
 import AgricultureValuation from "./pages/valuation/valuation/AgricultureValuation";
-import IntangibleValuation from "./pages/valuation/valuation/IntangibleValuation";
+import StockValuation from "./pages/valuation/StockValuation";
+import StartupValuation from "./pages/valuation/StartupValuation";
+import InfrastructureValuation from "./pages/valuation/InfrastructureValuation";
+import LegalValuation from "./pages/valuation/LegalValuation";
+import MergerValuation from "./pages/valuation/MergerValuation";
 
 const queryClient = new QueryClient();
 
