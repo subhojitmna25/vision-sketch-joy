@@ -36,7 +36,10 @@ import StartupValuation from "./pages/valuation/StartupValuation";
 import InfrastructureValuation from "./pages/valuation/InfrastructureValuation";
 import LegalValuation from "./pages/valuation/LegalValuation";
 import MergerValuation from "./pages/valuation/MergerValuation";
+import GlobalFinanceSettings from "./pages/GlobalFinanceSettings";
+import { CurrencySwitcherButton } from "./pages/GlobalFinanceSettings";
 
+<Route path="/settings/finance" element={<GlobalFinanceSettings />} />
 const queryClient = new QueryClient();
 
 const App = () => (
