@@ -38,7 +38,10 @@ import LegalValuation from "./pages/valuation/LegalValuation";
 import MergerValuation from "./pages/valuation/MergerValuation";
 import GlobalFinanceSettings from "./pages/GlobalFinanceSettings";
 import { CurrencySwitcherButton } from "./pages/GlobalFinanceSettings";
+import { CurrencySwitcherButton } from "./pages/GlobalFinanceSettings";
 
+// Inside your navbar:
+<CurrencySwitcherButton />
 <Route path="/settings/finance" element={<GlobalFinanceSettings />} />
 const queryClient = new QueryClient();
 
