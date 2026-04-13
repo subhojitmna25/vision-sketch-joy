@@ -1,4 +1,3 @@
-import React from "react";
 import LandingPage from "./pages/LandingPage";
 import FloatingChat from "./components/FloatingChat";
 import AuthPage from "./pages/AuthPage";
@@ -37,7 +36,6 @@ import StartupValuation from "./pages/valuation/StartupValuation";
 import InfrastructureValuation from "./pages/valuation/InfrastructureValuation";
 import LegalValuation from "./pages/valuation/LegalValuation";
 import MergerValuation from "./pages/valuation/MergerValuation";
-import GlobalFinanceSettings, { CurrencySwitcherButton } from "./pages/GlobalFinanceSettings";
 
 const queryClient = new QueryClient();
 
@@ -48,15 +46,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          {/* Note: If you want the CurrencySwitcher globally visible, keep it here. 
-              If it belongs in a Navbar, place it inside your Layout components instead. */}
-          <CurrencySwitcherButton /> 
-          
           <Routes>
             <Route path="/" element={<ErrorBoundary fallbackTitle="Landing page error"><LandingPage /></ErrorBoundary>} />
             <Route path="/auth" element={<ErrorBoundary fallbackTitle="Authentication error"><AuthPage /></ErrorBoundary>} />
-            
-            {/* Dashboard Routes */}
             <Route path="/dashboard" element={<ProtectedRoute><ErrorBoundary fallbackTitle="Dashboard error"><DashboardLayout /></ErrorBoundary></ProtectedRoute>}>
               <Route index element={<ErrorBoundary><DashboardOverview /></ErrorBoundary>} />
               <Route path="clients" element={<ErrorBoundary><ClientsPage /></ErrorBoundary>} />
@@ -72,11 +64,7 @@ const App = () => (
               <Route path="tools/investment-analyzer" element={<ErrorBoundary><InvestmentAnalyzer /></ErrorBoundary>} />
               <Route path="tools/tax-optimizer" element={<ErrorBoundary><TaxOptimizer /></ErrorBoundary>} />
               <Route path="admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
-              {/* Added Finance Settings here or as a top-level route depending on your preference */}
-              <Route path="settings/finance" element={<GlobalFinanceSettings />} />
             </Route>
-
-            {/* Valuation Routes */}
             <Route path="/valuation" element={<ErrorBoundary><ValuationHub /></ErrorBoundary>} />
             <Route path="/valuation/real-estate" element={<ErrorBoundary><RealEstateValuation /></ErrorBoundary>} />
             <Route path="/valuation/business" element={<ErrorBoundary><BusinessValuation /></ErrorBoundary>} />
@@ -88,7 +76,6 @@ const App = () => (
             <Route path="/valuation/infrastructure" element={<ErrorBoundary><InfrastructureValuation /></ErrorBoundary>} />
             <Route path="/valuation/legal" element={<ErrorBoundary><LegalValuation /></ErrorBoundary>} />
             <Route path="/valuation/merger" element={<ErrorBoundary><MergerValuation /></ErrorBoundary>} />
-            
             <Route path="*" element={<NotFound />} />
           </Routes>
           <FloatingChat />
